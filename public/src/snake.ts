@@ -1,9 +1,9 @@
 // snake.ts
 import { getInputDirection } from "./input";
 
-export const SNAKE_SPEED = 10;
 let snakeBody = [{ x: 11, y: 11 }];
 let newSegments = 0;
+let foodCollected = 0; // Track the number of food items collected
 
 export function update() {
     addSegments();
@@ -38,6 +38,7 @@ export function draw(gameBoard: HTMLElement) {
 
 export function expandSnake(amount: number) {
     newSegments += amount;
+    foodCollected += amount; // Increment the food collected count
 }
 
 export function onSnake(position: { x: number; y: number }, { ignoreHead = false } = {}): boolean {
@@ -70,6 +71,25 @@ function addSegments() {
 export function resetSnake() {
     snakeBody = [{ x: 11, y: 11 }];
     newSegments = 0;
+    foodCollected = 0; // Reset the food collected count
+}
+
+// Dynamic speed calculation
+export function getSnakeSpeed() {
+    const baseSpeed = 5; // Base speed
+    const speedIncrement = 0.5; // Speed increment per food item collected
+    return baseSpeed + (speedIncrement * foodCollected);
+}
+
+export function getFoodCollected() {
+    return foodCollected
+}
+
+// Score multiplier calculation
+export function getScoreMultiplier() {
+    const baseMultiplier = 0.1; // Base multiplier
+    const multiplierIncrement = 0.1; // Multiplier increment per food item collected
+    return baseMultiplier + (multiplierIncrement * foodCollected);
 
 
 

@@ -3,13 +3,15 @@ import { onSnake, expandSnake } from './snake';
 import { randomGridPosition } from './grid';
 
 let food = getRandomFoodPosition();
-const EXPANSION_RATE = 5;
+const EXPANSION_RATE = 1;
 
 export function update() {
     if (onSnake(food)) {
         expandSnake(EXPANSION_RATE);
         food = getRandomFoodPosition();
+        return true
     }
+    return false
 }
 
 export function draw(gameBoard: HTMLElement) {
@@ -40,10 +42,5 @@ function getRandomFoodPosition() {
 
 export function resetFood() {
     food = getRandomFoodPosition();
-
-
-
-
-
 
 }

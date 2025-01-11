@@ -47,13 +47,17 @@ body {
     visibility: hidden;
 }
 
-#score-board {
+#score-board, #countdown-display {
     position: absolute;
     top: 10px;
     left: 10px;
     color: white;
     font-size: 2rem;
     margin-bottom: 1rem;
+}
+
+#countdown-display {
+    top: 70px; /* Adjust the top position to place it below the score */
 }
 
 #game-board {
@@ -104,8 +108,28 @@ body {
     left: 50%;
     width: 5%;
     height: 20%;
-	border-radius: 30%;
+    border-radius: 30%;
     background-color: red;
     transform: translateX(-50%);
 }
 
+.timer-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 0, 0, 0.5); /* Red hue with 50% opacity */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 4rem; /* Make the timer big enough to be easily visible */
+    z-index: 9998; /* Ensure it overlays the game board */
+}
+
+.timer-overlay #overlay-timer {
+    background: rgba(0, 0, 0, 0.5); /* Dark background for the timer text */
+    padding: 10px 20px;
+    border-radius: 10px;
+}

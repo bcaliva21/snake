@@ -11,6 +11,8 @@ let animationFrameId: number | null = null; // Track the animation frame ID
 const TIME_LIMIT = 5000; // milliseconds (5 seconds)
 const gameBoard = document.getElementById('game-board') as HTMLElement;
 const startModal = document.getElementById('start-modal') as HTMLElement;
+const timerOverlay = document.getElementById('timer-overlay') as HTMLElement;
+const overlayTimer = document.getElementById('overlay-timer') as HTMLElement;
 let countdownTimer = TIME_LIMIT; // Timer in milliseconds
 let startTime: number | null = null; // The time when the game started (initial)
 let elapsedTimeSinceStart = 0; // Track the total elapsed time since game start
@@ -27,6 +29,7 @@ function endGame(currentTime: number, startTime: number) {
     gameHasStarted = false;
     gameOver = false;
     startModal.classList.remove('hide');
+    overlayTimer.textContent = 'No more time!'
     addEndGameScoreToEntryModal(currentTime, startTime);
     resetGameState();
 
@@ -131,5 +134,15 @@ function renderTimer(time: number) {
     } else {
         countdownElement.style.color = 'white';
     }
-}
 
+    // Show the overlay when time is less than or equal to 2 seconds
+    if (time <= 2000) {
+        timerOverlay.classList.remove('hide');
+        overlayTimer.textContent = `Time: ${(time / 1000).toFixed(3)}s`;
+    } else {
+        timerOverlay.classList.add('hide');
+    }
+
+
+
+}

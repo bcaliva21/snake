@@ -11,14 +11,11 @@ import {
     WebSocketServer
 } from 'ws';
 import https from 'https';
-import pool from './db.js'; // Import the database connection
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-app.use(express.json()); // To parse JSON bodies
-
 // Use your local cert and key
 const privateKey = fs.readFileSync(path.join(__dirname, 'certs', 'private.key'), 'utf8');
 const certificate = fs.readFileSync(path.join(__dirname, 'certs', 'certificate.crt'), 'utf8');
@@ -28,7 +25,7 @@ const credentials = {
     key: privateKey,
     cert: certificate
 };
-const server = https.createServer(credentials, app);
+const server = https.createServer(credentials, app)
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -41,43 +38,8 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Endpoint to submit a new score
-app.post('/api/scores', async (req, res) => {
-    const {
-        username,
-        score
-    } = req.body;
-    try {
-        const [result] = await pool.execute(
-            'INSERT INTO scores (username, score) VALUES (?, ?)',
-            [username, score]
-        );
-        res.status(201).json({
-            id: result.insertId,
-            username,
-            score
-        });
-    } catch (error) {
-        console.error('Error inserting score:', error);
-        res.status(500).json({
-            error: 'Internal Server Error'
-        });
-    }
-});
-
-// Endpoint to get high scores
-app.get('/api/scores/high', async (req, res) => {
-    try {
-        const [rows] = await pool.execute(
-            'SELECT username, score FROM scores ORDER BY score DESC LIMIT 10'
-        );
-        res.status(200).json(rows);
-    } catch (error) {
-        console.error('Error fetching high scores:', error);
-        res.status(500).json({
-            error: 'Internal Server Error'
-        });
-    }
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const serverApp = server.listen(PORT, () => {
@@ -86,7 +48,7 @@ const serverApp = server.listen(PORT, () => {
 
 // Create a WebSocket server
 const wss = new WebSocketServer({
-    server: serverApp
+    server: serverApp,
 });
 
 let playerSocket = null;
@@ -115,5 +77,5 @@ wss.on('connection', (ws) => {
         if (ws === playerSocket) {
             playerSocket = null;
         }
-    });
+    })
 });

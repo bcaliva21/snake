@@ -2,7 +2,7 @@
 import { onSnake, expandSnake } from './snake';
 import { randomGridPosition } from './grid';
 
-let food = getRandomFoodPosition();
+export let food = getRandomFoodPosition();
 const EXPANSION_RATE = 1;
 
 export function update() {
@@ -14,10 +14,10 @@ export function update() {
     return false
 }
 
-export function draw(gameBoard: HTMLElement) {
+export function draw(gameBoard: HTMLElement, currentFood: { x: number, y: number }) {
     const foodElement = document.createElement('div');
-    foodElement.style.gridRowStart = food.y.toString();
-    foodElement.style.gridColumnStart = food.x.toString();
+    foodElement.style.gridRowStart = currentFood.y.toString();
+    foodElement.style.gridColumnStart = currentFood.x.toString();
     foodElement.classList.add('food');
 
     // Add rat image
@@ -42,5 +42,8 @@ function getRandomFoodPosition() {
 
 export function resetFood() {
     food = getRandomFoodPosition();
+
+
+
 
 }

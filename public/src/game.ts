@@ -1,6 +1,6 @@
 // game.ts
-import { resetSnake, update as updateSnake, draw as drawSnake, getSnakeHead, snakeIntersection, getSnakeSpeed } from './snake';
-import { resetFood, update as updateFood, draw as drawFood } from './food';
+import { getScoreMultiplier, snakeBody, resetSnake, update as updateSnake, draw as drawSnake, getSnakeHead, snakeIntersection, getSnakeSpeed } from './snake';
+import { food, resetFood, update as updateFood, draw as drawFood } from './food';
 import { outsideGrid } from './grid';
 import { addEndGameScoreToEntryModal, updateScore } from './score';
 
@@ -17,6 +17,24 @@ let countdownTimer = TIME_LIMIT; // Timer in milliseconds
 let startTime: number | null = null; // The time when the game started (initial)
 let elapsedTimeSinceStart = 0; // Track the total elapsed time since game start
 
+// WebSocket connection
+const ws = new WebSocket('wss://localhost:3000');
+
+ws.onopen = () => {
+    console.log('WebSocket connection opened');
+    // Send a message indicating this client is the player
+    ws.send(JSON.stringify({ type: 'player' }));
+};
+
+ws.onmessage = (event) => {
+    console.log('Received:', event.data);
+    // Handle incoming messages (e.g., game state updates)
+};
+
+ws.onclose = () => {
+    console.log('WebSocket connection closed');
+};
+
 window.addEventListener('keydown', (e) => {
     if (e.key.startsWith('Arrow') || ['w', 'a', 's', 'd'].includes(e.key)) {
         if (!gameHasStarted) {
@@ -29,7 +47,6 @@ function endGame(currentTime: number, startTime: number) {
     gameHasStarted = false;
     gameOver = false;
     startModal.classList.remove('hide');
-    overlayTimer.textContent = 'No more time!'
     addEndGameScoreToEntryModal(currentTime, startTime);
     resetGameState();
 
@@ -65,7 +82,7 @@ function main(currentTime: number) {
     }
 
     const secondsSinceLastRender = (currentTime - lastRenderTime) / 1000;
-    const snakeSpeed = getSnakeSpeed(); // Get the dynamic snake speed
+    const snakeSpeed = getSnakeSpeed();
     if (secondsSinceLastRender < 1 / snakeSpeed) return;
 
     lastRenderTime = currentTime;
@@ -74,13 +91,14 @@ function main(currentTime: number) {
         update(currentTime, startTime);
         draw();
         updateCountdownTimer(currentTime, startTime, false);
+        console.log('here')
+        sendGameState();
     }
 }
 
 function update(currentTime: number, startTime: number) {
     updateSnake();
     if (updateFood()) {
-        // Add 6000ms when food is collected
         updateCountdownTimer(currentTime, startTime, true);
     }
 
@@ -90,8 +108,8 @@ function update(currentTime: number, startTime: number) {
 
 function draw() {
     gameBoard.innerHTML = '';
-    drawSnake(gameBoard);
-    drawFood(gameBoard);
+    drawSnake(gameBoard, snakeBody);
+    drawFood(gameBoard, food);
 }
 
 function checkDeath(currentTime: number, startTime: number) {
@@ -142,7 +160,18 @@ function renderTimer(time: number) {
     } else {
         timerOverlay.classList.add('hide');
     }
-
-
-
 }
+
+function sendGameState() {
+    console.log('inside send gaem state')
+    const gameState = {
+        type: 'gameState',
+        snakeBody: snakeBody,
+        food: food,
+        score: Math.floor(elapsedTimeSinceStart * getScoreMultiplier()),
+        countdownTimer: countdownTimer - elapsedTimeSinceStart,
+    };
+    console.log('sendGameState: ', JSON.stringify(gameState))
+    ws.send(JSON.stringify(gameState));
+}
+

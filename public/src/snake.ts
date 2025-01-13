@@ -1,7 +1,7 @@
 // snake.ts
 import { getInputDirection } from "./input";
 
-let snakeBody = [{ x: 11, y: 11 }];
+export let snakeBody = [{ x: 11, y: 11 }];
 let newSegments = 0;
 let foodCollected = 0; // Track the number of food items collected
 
@@ -16,8 +16,8 @@ export function update() {
     snakeBody[0].y += inputDirection.y;
 }
 
-export function draw(gameBoard: HTMLElement) {
-    snakeBody.forEach((segment, index) => {
+export function draw(gameBoard: HTMLElement, body: { x: number; y: number }[]) {
+    body.forEach((segment, index) => {
         const snakeElement = document.createElement('div');
         snakeElement.style.gridRowStart = segment.y.toString();
         snakeElement.style.gridColumnStart = segment.x.toString();
@@ -90,6 +90,8 @@ export function getScoreMultiplier() {
     const baseMultiplier = 0.1; // Base multiplier
     const multiplierIncrement = 0.1; // Multiplier increment per food item collected
     return baseMultiplier + (multiplierIncrement * foodCollected);
+
+
 
 
 

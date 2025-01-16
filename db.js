@@ -1,8 +1,15 @@
 // db.js
 import mysql from 'mysql2/promise';
-import {
-    dbConfig
-} from './config/db.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const dbConfig = {
+    host: process.env.DATABASE_HOST,
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME
+};
 
 const pool = mysql.createPool(dbConfig);
 

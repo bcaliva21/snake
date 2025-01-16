@@ -1,23 +1,34 @@
 // server.js
 import express from 'express';
 import fs from 'fs';
-import path, {
-    dirname
-} from 'path';
-import {
-    fileURLToPath
-} from 'url';
-import {
-    WebSocketServer
-} from 'ws';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { WebSocketServer } from 'ws';
 import https from 'https';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import session from 'express-session';
 import pool from './db.js'; // Import the database connection
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
 app.use(express.json()); // To parse JSON bodies
+app.use(session({
+    secret: CLIENT_SECRET,
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Use your local cert and key
 const privateKey = fs.readFileSync(path.join(__dirname, 'certs', 'private.key'), 'utf8');
@@ -43,10 +54,13 @@ app.get('/health', (req, res) => {
 
 // Endpoint to submit a new score
 app.post('/api/scores', async (req, res) => {
-    const {
-        username,
-        score
-    } = req.body;
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({
+            error: 'Unauthorized'
+        });
+    }
+    const { score } = req.body;
+    const username = req.user.profile.name;
     try {
         const [result] = await pool.execute(
             'INSERT INTO scores (username, score) VALUES (?, ?)',
@@ -65,6 +79,20 @@ app.post('/api/scores', async (req, res) => {
     }
 });
 
+app.get('/api/user', (req, res) => {
+    if (req.isAuthenticated()) {
+        const user = req.user;
+        console.log('user: ', user)
+        res.json({
+            username: user.profile.displayName
+        });
+    } else {
+        res.status(401).json({
+            error: 'Unauthorized'
+        });
+    }
+});
+
 // Endpoint to get high scores
 app.get('/api/scores/high', async (req, res) => {
     try {
@@ -78,6 +106,47 @@ app.get('/api/scores/high', async (req, res) => {
             error: 'Internal Server Error'
         });
     }
+});
+
+// Google OAuth 2.0 configuration
+passport.use(new GoogleStrategy({
+    clientID: CLIENT_ID,
+    clientSecret: CLIENT_SECRET,
+    callbackURL: CLIENT_URL,
+}, (accessToken, refreshToken, profile, done) => {
+    return done(null, {
+        profile,
+        accessToken
+    });
+}));
+
+passport.serializeUser((user, done) => {
+    done(null, user);
+});
+
+passport.deserializeUser((obj, done) => {
+    done(null, obj);
+});
+
+app.get('/auth/google', passport.authenticate('google', {
+    scope: ['profile']
+}));
+
+app.get('/auth/google/callback', passport.authenticate('google', {
+        failureRedirect: '/'
+    }),
+    (req, res) => {
+        res.redirect('/');
+    }
+);
+
+app.get('/logout', (req, res) => {
+    req.logout(function (err) {
+        if (err) {
+            return next(err);
+        }
+        res.redirect('/');
+    });
 });
 
 const serverApp = server.listen(PORT, () => {
